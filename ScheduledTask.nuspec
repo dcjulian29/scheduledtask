@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>ScheduledTask</id>
+    <version>0.0.0</version>
+    <authors>Julian Easterling</authors>
+    <projectUrl>https://github.com/dcjulian29/ScheduledTask</projectUrl>
+    <license type="expression">Apache-2.0</license>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Scheduled Task</description>
+  </metadata>
+  <files>
+    <!-- Application Executable Files -->
+    <file src=".build\output\ScheduledTask.exe" />
+    <file src=".build\output\ScheduledTask.dll" />
+    <file src=".build\output\ScheduledTask.dll.config" />
+
+    <!-- Third-Party Library Files -->
+    <file src=".build\output\Quartz.dll" />
+    <file src=".build\output\Serilog.dll" />
+    <file src=".build\output\Serilog.*.dll" />
+    <file src=".build\output\System.*.dll" />
+    <file src=".build\output\Topshelf.dll" />
+    <file src=".build\output\Topshelf.*.dll" />
+  </files>
+</package>
