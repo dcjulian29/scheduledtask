@@ -123,7 +123,7 @@ Task("Package")
 
         var nuGetPackSettings = new NuGetPackSettings {
             NoPackageAnalysis       = true,
-            Version = gitversion.SemVer,
+            Version = version,
             OutputDirectory = buildDirectory + "\\packages"
         };
 
