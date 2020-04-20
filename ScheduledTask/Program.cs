@@ -1,5 +1,7 @@
 using System;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Runtime.Loader;
 using Serilog;
 using Topshelf;
 
@@ -7,6 +9,8 @@ namespace ScheduledTask
 {
     internal static class Program
     {
+        private static ScheduleJobService _service;
+
         public static void Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
@@ -17,25 +21,52 @@ namespace ScheduledTask
 
             Log.Information($"{assembly.Name} {assembly.Version} initialized on {Environment.MachineName}");
 
-            var rc = HostFactory.Run(x =>
-            {
-                x.Service<ScheduleJobService>(s =>
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+                Log.Debug("Running on Non-Windows. Running as console style application.");
+
+                _service = new ScheduleJobService();
+                _service.Start();
+
+                AssemblyLoadContext.Default.Unloading += SigTermEventHandler;
+                Console.CancelKeyPress += CancelHandler;
+
+                while (true)
                 {
-                    s.ConstructUsing(name => new ScheduleJobService());
-                    s.WhenStarted(j => j.Start());
-                    s.WhenStopped(j => j.Stop());
+                    Console.Read();
+                };
+            } else {
+                Log.Debug("Running on Windows... Using TopSelf to handle service.");
+
+                HostFactory.Run(x =>
+                {
+                    x.Service<ScheduleJobService>(s =>
+                    {
+                        s.ConstructUsing(name => new ScheduleJobService());
+                        s.WhenStarted(j => j.Start());
+                        s.WhenStopped(j => j.Stop());
+                    });
+
+                    x.UseSerilog(Log.Logger);
+
+                    x.RunAsLocalSystem();
+
+                    x.SetDescription($"Service Runtime for {assembly.Name} {assembly.Version}");
+                    x.SetDisplayName($"{assembly.Name} Service");
+                    x.SetServiceName(assembly.Name);
                 });
+            }
+        }
 
-                x.UseSerilog(Log.Logger);
+        private static void SigTermEventHandler(AssemblyLoadContext context)
+        {
+            Log.Information("Caught SigTerm... Shutting down...");
+            _service.Stop();
+        }
 
-                x.RunAsLocalSystem();
-
-                x.SetDescription($"Service Runtime for {assembly.Name} {assembly.Version}");
-                x.SetDisplayName($"{assembly.Name} Service");
-                x.SetServiceName(assembly.Name);
-            });
-
-            Environment.ExitCode = (int)Convert.ChangeType(rc, rc.GetTypeCode());
+        private static void CancelHandler(object sender, ConsoleCancelEventArgs e)
+        {
+            Log.Information("Shutting down...");
+            _service.Stop();
         }
     }
 }
