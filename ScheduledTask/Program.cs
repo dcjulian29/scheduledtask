@@ -9,7 +9,7 @@ namespace ScheduledTask
 {
     internal static class Program
     {
-        private static ScheduleJobService _service;
+        private static ScheduleTaskService _service;
 
         public static void Main(string[] args)
         {
@@ -25,7 +25,7 @@ namespace ScheduledTask
             {
                 Log.Debug("Running on Non-Windows. Running as console style application.");
 
-                _service = new ScheduleJobService();
+                _service = new ScheduleTaskService();
                 _service.Start();
 
                 AssemblyLoadContext.Default.Unloading += SigTermEventHandler;
@@ -42,9 +42,9 @@ namespace ScheduledTask
 
                 HostFactory.Run(x =>
                 {
-                    x.Service<ScheduleJobService>(s =>
+                    x.Service<ScheduleTaskService>(s =>
                     {
-                        s.ConstructUsing(name => new ScheduleJobService());
+                        s.ConstructUsing(name => new ScheduleTaskService());
                         s.WhenStarted(j => j.Start());
                         s.WhenStopped(j => j.Stop());
                     });

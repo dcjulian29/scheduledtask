@@ -15,14 +15,14 @@ namespace ScheduledTask
     /// <summary>
     ///   ScheduleJob Windows Service
     /// </summary>
-    public class ScheduleJobService
+    public class ScheduleTaskService
     {
         private readonly IScheduler _scheduler;
 
         /// <summary>
-        ///   Initializes a new instance of the <see cref="ScheduleJobService" /> class.
+        ///   Initializes a new instance of the <see cref="ScheduleTaskService" /> class.
         /// </summary>
-        public ScheduleJobService()
+        public ScheduleTaskService()
         {
             var props = new NameValueCollection
             {
