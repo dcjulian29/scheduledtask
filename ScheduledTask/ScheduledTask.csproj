@@ -15,4 +15,10 @@
     <PackageReference Include="Topshelf.serilog" Version="4.2.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\TaskHello1\TaskHello1.csproj" />
+    <ProjectReference Include="..\ScheduledTask.Interfaces\ScheduledTask.Interfaces.csproj" />
+    <ProjectReference Include="..\TaskHello2\TaskHello2.csproj" />
+  </ItemGroup>
+
 </Project>
