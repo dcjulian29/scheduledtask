@@ -1,6 +1,14 @@
+using System;
 using System.Collections.Specialized;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Loader;
 using Quartz;
 using Quartz.Impl;
+using ScheduledTask.Interfaces;
+using Serilog;
 
 namespace ScheduledTask
 {
@@ -34,11 +42,46 @@ namespace ScheduledTask
         /// </summary>
         public void Start()
         {
-            _scheduler
-                .ScheduleJob(Job.JobDetail, Job.Trigger)
-                .ConfigureAwait(false)
-                .GetAwaiter()
-                .GetResult();
+            var jobLocation = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+
+            if (Directory.Exists(Path.Combine(jobLocation, "jobs")))
+            {
+                jobLocation = Path.Combine(jobLocation, "jobs");
+            }
+
+            Log.Debug("Will look in '{0}' for jobs...", jobLocation);
+
+            var files = Directory.GetFiles(jobLocation, "*.dll");
+
+            if (files.Length > 0)
+            {
+                var interfaceType = typeof(IScheduledJob);
+                var assemblies = files.Select(AssemblyLoadContext.Default.LoadFromAssemblyPath);
+
+                foreach (var assembly in assemblies.ToList())
+                {
+                    foreach (var type in assembly.GetTypes())
+                    {
+                        if ((type != interfaceType) && interfaceType.IsAssignableFrom(type))
+                        {
+                            var job = (IScheduledJob)Activator.CreateInstance(type);
+                            var versionInfo = FileVersionInfo.GetVersionInfo(type.Assembly.Location);
+
+                            Log.Debug(
+                                "Loaded {0}::{1} [v{2}]",
+                                type.AssemblyQualifiedName,
+                                type.FullName,
+                                versionInfo.FileVersion);
+
+                            _scheduler
+                                .ScheduleJob(job.JobDetail, job.Trigger)
+                                .ConfigureAwait(false)
+                                .GetAwaiter()
+                                .GetResult();
+                        }
+                    }
+                }
+            }
 
             _scheduler
                 .Start()
