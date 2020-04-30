@@ -15,9 +15,6 @@ var baseDirectory = MakeAbsolute(Directory("."));
 var buildDirectory = baseDirectory + "\\.build";
 var outputDirectory = buildDirectory + "\\output";
 
-var solutionFile = String.Format("{0}\\{1}.sln", baseDirectory, projectName);
-
-
 var gitversion = GitVersion(new GitVersionSettings{
     UpdateAssemblyInfo = false,
     OutputType = GitVersionOutput.Json
@@ -35,12 +32,19 @@ if (AppVeyor.IsRunningOnAppVeyor) {
     }
 }
 
-var msbuildSettings = new MSBuildSettings {
+var dotNetCoreBuildSettings = new DotNetCoreBuildSettings {
     Configuration = configuration,
-    ToolVersion = MSBuildToolVersion.VS2019,
-    NodeReuse = false,
-    WarningsAsError = false
-}.WithProperty("OutDir", outputDirectory);
+    OutputDirectory = outputDirectory,
+    MSBuildSettings = new DotNetCoreMSBuildSettings {
+        TreatAllWarningsAs = MSBuildTreatAllWarningsAs.Error,
+        Verbosity = DotNetCoreVerbosity.Normal
+    },
+    NoDependencies = true,
+    NoIncremental = true,
+    NoRestore = true
+};
+
+var restoreSettings = new DotNetCoreRestoreSettings { NoDependencies = true };
 
 Setup(setupContext =>
 {
@@ -49,7 +53,7 @@ Setup(setupContext =>
         Information("Switching to Release Configuration for packaging...");
         configuration = "Release";
 
-        msbuildSettings.Configuration = "Release";
+        dotNetCoreBuildSettings.Configuration = "Release";
     }
 });
 
@@ -78,7 +82,13 @@ Task("Clean")
     .Does(() =>
     {
         CleanDirectories(buildDirectory);
-        MSBuild(solutionFile, msbuildSettings.WithTarget("Clean"));
+
+        var settings = new DotNetCoreCleanSettings { Configuration = dotNetCoreBuildSettings.Configuration };
+
+        DotNetCoreClean("ScheduledTask/ScheduledTask.csproj", settings);
+        DotNetCoreClean("ScheduledTask.Interfaces/ScheduledTask.Interfaces.csproj", settings);
+        DotNetCoreClean("TaskHello1/TaskHello1.csproj", settings);
+        DotNetCoreClean("TaskHello2/TaskHello2.csproj", settings);
     });
 
 Task("Init")
@@ -108,11 +118,75 @@ Task("Version")
     });
 
 Task("Compile")
+    .IsDependentOn("Compile.ScheduledTask")
+    .IsDependentOn("Compile.TaskHello1")
+    .IsDependentOn("Compile.TaskHello2");
+
+Task("Compile.ScheduledTask")
+    .IsDependentOn("Compile.Interfaces")
+    .Does(() =>
+    {
+        var settings = dotNetCoreBuildSettings;
+        settings.MSBuildSettings.AddFileLogger(
+            new MSBuildFileLoggerSettings {
+                LogFile = buildDirectory + "/msbuild-ScheduledTask.log" });
+
+        DotNetCoreRestore("ScheduledTask/ScheduledTask.csproj", restoreSettings);
+        DotNetCoreBuild("ScheduledTask/ScheduledTask.csproj", settings);
+    });
+
+Task("Compile.Interfaces")
     .IsDependentOn("Init")
     .IsDependentOn("Version")
     .Does(() =>
     {
-        MSBuild(solutionFile, msbuildSettings.WithTarget("ReBuild"));
+        var settings = dotNetCoreBuildSettings;
+        settings.MSBuildSettings.AddFileLogger(
+            new MSBuildFileLoggerSettings {
+                LogFile = buildDirectory + "/msbuild-Interfaces.log" });
+
+        DotNetCoreRestore("ScheduledTask.Interfaces/ScheduledTask.Interfaces.csproj", restoreSettings);
+        DotNetCoreBuild("ScheduledTask.Interfaces/ScheduledTask.Interfaces.csproj", settings);
+    });
+
+Task("Compile.TaskHello1")
+    .IsDependentOn("Compile.Interfaces")
+    .Does(() =>
+    {
+        var settings = dotNetCoreBuildSettings;
+        settings.MSBuildSettings.AddFileLogger(
+            new MSBuildFileLoggerSettings {
+                LogFile = buildDirectory + "/msbuild-TaskHello1.log" });
+
+        DotNetCoreRestore("TaskHello1/TaskHello1.csproj", restoreSettings);
+        DotNetCoreBuild("TaskHello1/TaskHello1.csproj", settings);
+    });
+
+Task("Compile.TaskHello2")
+    .IsDependentOn("Compile.Interfaces")
+    .Does(() =>
+    {
+        var settings = dotNetCoreBuildSettings;
+        settings.MSBuildSettings.AddFileLogger(
+            new MSBuildFileLoggerSettings {
+                LogFile = buildDirectory + "/msbuild-TaskHello2.log" });
+
+        DotNetCoreRestore("TaskHello2/TaskHello2.csproj", restoreSettings);
+        DotNetCoreBuild("TaskHello2/TaskHello2.csproj", settings);
+    });
+
+Task("Run")
+    .IsDependentOn("Compile")
+    .Does(() =>
+    {
+        var info = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "ScheduledTask.exe",
+            Arguments = "",
+            WorkingDirectory = outputDirectory
+        };
+
+        System.Diagnostics.Process.Start(info);
     });
 
 Task("Package")
@@ -122,7 +196,7 @@ Task("Package")
         CreateDirectory(buildDirectory + "\\packages");
 
         var nuGetPackSettings = new NuGetPackSettings {
-            NoPackageAnalysis       = true,
+            NoPackageAnalysis = true,
             Version = version,
             OutputDirectory = buildDirectory + "\\packages"
         };
