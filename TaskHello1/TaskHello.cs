@@ -1,29 +1,30 @@
 using System.Threading.Tasks;
 using Quartz;
+using ScheduledTask.Interfaces;
 using Serilog;
 
-namespace ScheduledTask
+namespace TaskHello1
 {
     /// <summary>
-    ///   This the scheduled job that will execute according to the trigger
+    ///   Sample scheduled task
     /// </summary>
-    public class Job : IJob
+    public class TaskHello : IScheduledJob
     {
         /// <summary>
         ///   Gets the job details.
         /// </summary>
-        public static IJobDetail JobDetail => JobBuilder.Create<Job>()
-                .WithIdentity("job", "group")
+        public IJobDetail JobDetail => JobBuilder.Create<TaskHello>()
+                .WithIdentity("TaskHello1", "HelloGroup")
                 .Build();
 
         /// <summary>
         ///   Gets the trigger for this job
         /// </summary>
-        public static ITrigger Trigger => TriggerBuilder.Create()
-                .WithIdentity("trigger", "group")
+        public ITrigger Trigger => TriggerBuilder.Create()
+                .WithIdentity("Hello1Trigger", "HelloGroup")
                 .StartNow()
                 .WithSimpleSchedule(x => x
-                    .WithIntervalInMinutes(1)
+                    .WithIntervalInSeconds(15)
                     .RepeatForever())
                 .Build();
 
@@ -37,9 +38,7 @@ namespace ScheduledTask
         {
             var lastRun = context.PreviousFireTimeUtc?.LocalDateTime.ToString() ?? string.Empty;
 
-            Log.Warning("The Job is executing: Previous run: {lastRun}", lastRun);
-
-            // Do the work here
+            Log.Warning("The Task 1 is executing: Previous run: {lastRun}", lastRun);
 
             return Task.CompletedTask;
         }
