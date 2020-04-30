@@ -21,7 +21,8 @@ namespace ScheduledTask
 
             Log.Information($"{assembly.Name} {assembly.Version} initialized on {Environment.MachineName}");
 
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
                 Log.Debug("Running on Non-Windows. Running as console style application.");
 
                 _service = new ScheduleJobService();
@@ -33,8 +34,10 @@ namespace ScheduledTask
                 while (true)
                 {
                     Console.Read();
-                };
-            } else {
+                }
+            }
+            else
+            {
                 Log.Debug("Running on Windows... Using TopSelf to handle service.");
 
                 HostFactory.Run(x =>
@@ -57,15 +60,15 @@ namespace ScheduledTask
             }
         }
 
-        private static void SigTermEventHandler(AssemblyLoadContext context)
-        {
-            Log.Information("Caught SigTerm... Shutting down...");
-            _service.Stop();
-        }
-
         private static void CancelHandler(object sender, ConsoleCancelEventArgs e)
         {
             Log.Information("Shutting down...");
+            _service.Stop();
+        }
+
+        private static void SigTermEventHandler(AssemblyLoadContext context)
+        {
+            Log.Information("Caught SigTerm... Shutting down...");
             _service.Stop();
         }
     }
