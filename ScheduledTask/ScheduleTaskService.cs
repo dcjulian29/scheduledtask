@@ -78,6 +78,8 @@ namespace ScheduledTask
                                 .ConfigureAwait(false)
                                 .GetAwaiter()
                                 .GetResult();
+
+                            job.Initialize();
                         }
                     }
                 }
