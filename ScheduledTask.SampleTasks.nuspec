@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>ScheduledTask.SampleTasks</id>
+    <version>0.0.0</version>
+    <authors>Julian Easterling</authors>
+    <projectUrl>https://github.com/dcjulian29/ScheduledTask</projectUrl>
+    <license type="expression">Apache-2.0</license>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Scheduled Task Sample Implementation with 2 tasks</description>
+    <dependencies>
+      <dependency id="ScheduledTask" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src=".build\output\TaskHello1.dll" target="jobs/" />
+    <file src=".build\output\TaskHello2.dll" target="jobs/" />
+  </files>
+</package>

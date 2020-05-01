@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>ScheduledTask.Interfaces</id>
+    <version>0.0.0</version>
+    <authors>Julian Easterling</authors>
+    <projectUrl>https://github.com/dcjulian29/ScheduledTask</projectUrl>
+    <license type="expression">Apache-2.0</license>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Scheduled Task Interfaces</description>
+    <dependencies>
+      <group targetFramework="netstandard2.0">
+        <dependency id="Quartz" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src=".build\output\ScheduledTask.Interfaces.*"  target="lib/netstandard2.0" />
+  </files>
+</package>

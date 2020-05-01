@@ -9,7 +9,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
 		build.cake = build.cake
+		ScheduledTask.Interfaces.nuspec = ScheduledTask.Interfaces.nuspec
 		ScheduledTask.nuspec = ScheduledTask.nuspec
+		ScheduledTask.SampleTasks.nuspec = ScheduledTask.SampleTasks.nuspec
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScheduledTask", "ScheduledTask\ScheduledTask.csproj", "{D67DF128-1BFB-400A-985F-6E82A259C0FD}"
