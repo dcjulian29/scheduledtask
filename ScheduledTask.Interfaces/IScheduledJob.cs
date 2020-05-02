@@ -21,5 +21,10 @@ namespace ScheduledTask.Interfaces
         ///   Initializes this Scheduled Task.
         /// </summary>
         void Initialize();
+
+        /// <summary>
+        ///   Allow this Scheduled Task a chance to clean things up if needed.
+        /// </summary>
+        void Shutdown();
     }
 }

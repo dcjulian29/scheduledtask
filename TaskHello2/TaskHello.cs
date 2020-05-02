@@ -50,5 +50,13 @@ namespace TaskHello2
         {
             Log.Debug("Initializing Task 2...");
         }
+
+        /// <summary>
+        ///   Allow this Scheduled Task a chance to clean things up if needed.
+        /// </summary>
+        public void Shutdown()
+        {
+            Log.Debug("Shutting down task 2...");
+        }
     }
 }

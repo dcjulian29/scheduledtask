@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using Quartz;
 using Quartz.Impl;
+using Quartz.Impl.Matchers;
 using ScheduledTask.Interfaces;
 using Serilog;
 
@@ -68,16 +69,19 @@ namespace ScheduledTask
                             var versionInfo = FileVersionInfo.GetVersionInfo(type.Assembly.Location);
 
                             Log.Debug(
-                                "Loaded {0}::{1} [v{2}]",
-                                type.AssemblyQualifiedName,
+                                "Loaded {0} [v{1}]",
                                 type.FullName,
                                 versionInfo.FileVersion);
 
+                            var jobDetail = job.JobDetail;
+
                             _scheduler
-                                .ScheduleJob(job.JobDetail, job.Trigger)
+                                .ScheduleJob(jobDetail, job.Trigger)
                                 .ConfigureAwait(false)
                                 .GetAwaiter()
                                 .GetResult();
+
+                            Log.Debug("-- Initialize Job: '{0}', class={1}", jobDetail.Key, jobDetail.JobType);
 
                             job.Initialize();
                         }
@@ -97,6 +101,25 @@ namespace ScheduledTask
         /// </summary>
         public void Stop()
         {
+            _scheduler
+                .PauseAll()
+                .ConfigureAwait(false)
+                .GetAwaiter()
+                .GetResult();
+
+            foreach (var group in _scheduler.GetJobGroupNames().Result)
+            {
+                foreach (var key in _scheduler.GetJobKeys(GroupMatcher<JobKey>.GroupContains(group)).Result)
+                {
+                    var jobDetail = _scheduler.GetJobDetail(key).Result;
+
+                    Log.Debug("-- Shutdown Job: '{0}', class={1}", jobDetail.Key, jobDetail.JobType);
+                    var job = (IScheduledJob)Activator.CreateInstance(jobDetail.JobType);
+
+                    job.Shutdown();
+                }
+            }
+
             _scheduler
                 .Shutdown()
                 .ConfigureAwait(false)
