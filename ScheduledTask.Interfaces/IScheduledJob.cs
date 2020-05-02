@@ -16,5 +16,15 @@ namespace ScheduledTask.Interfaces
         ///   Gets the trigger for this job
         /// </summary>
         ITrigger Trigger { get; }
+
+        /// <summary>
+        ///   Initializes this Scheduled Task.
+        /// </summary>
+        void Initialize();
+
+        /// <summary>
+        ///   Allow this Scheduled Task a chance to clean things up if needed.
+        /// </summary>
+        void Shutdown();
     }
 }

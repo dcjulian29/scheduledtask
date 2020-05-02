@@ -38,9 +38,25 @@ namespace TaskHello2
         {
             var lastRun = context.PreviousFireTimeUtc?.LocalDateTime.ToString() ?? string.Empty;
 
-            Log.Warning("The Task2 is executing: Previous run: {lastRun}", lastRun);
+            Log.Warning("Task 2 is executing: Previous run: {lastRun}", lastRun);
 
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        ///   Initializes this Scheduled Task.
+        /// </summary>
+        public void Initialize()
+        {
+            Log.Debug("Initializing Task 2...");
+        }
+
+        /// <summary>
+        ///   Allow this Scheduled Task a chance to clean things up if needed.
+        /// </summary>
+        public void Shutdown()
+        {
+            Log.Debug("Shutting down task 2...");
         }
     }
 }
